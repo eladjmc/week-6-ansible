@@ -95,7 +95,17 @@ private_key_file = ~/.ssh/id_rsa
 
 ###  Check the connection: `ansible all -i inventory -m ping`
 
+after checking your connection if everything is good you can run the playbook
+```bash
+ansible-playbook -i inventory playbook.yml
+```
+### A video tutorial about how to run playbooks:
 
+https://www.youtube.com/watch?v=JNGCj2BN3SI
+
+__________________________________________________
+
+## Enjoy
 
 
 
