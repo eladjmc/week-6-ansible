@@ -1,0 +1,65 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Setting up the application servers
+  become: true
+  hosts: 
+    - production
+    - staging
+  tasks:
+    - name: Update apt packages.
+      become: true
+      apt:
+        upgrade: 'True'
+        update_cache: true
+
+
+    - name: install node version 14
+      shell: sudo curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && sudo apt-get install -y nodejs
+      args:
+        warn: false
+
+    - name: Install NPM.
+      become: true
+      ansible.builtin.apt:
+        name: npm
+        state: latest
+        update_cache: yes
+      ignore_errors: true #running a 2nd time will give errors because it is already installed
+
+    - name: Clone app git repo
+      ansible.builtin.git:
+        repo: https://github.com/eladjmc/bootcamp-app.git
+        dest: "/home/{{user}}/bootcamp-app"
+        clone: yes
+        update: yes
+        force: yes
+
+    - name: Copy .env file to the machine.
+      ansible.builtin.copy:
+        src: "/home/{{ local_user }}/{{ local_env_folder }}/.env"
+        dest: /home/{{user}}/bootcamp-app/
+        owner: "{{user}}"
+        group: "{{user}}"
+        mode: "0644"
+
+    - name: NPM start on app.
+      npm:
+        path: "/home/{{user}}/bootcamp-app"
+        state: latest
+
+
+    - name: Install pm2.
+      shell: npm install pm2@latest -g
+
+    - name: Run application
+      shell: pm2 start npm -- run dev && pm2 save && pm2 startup
+      args:
+        chdir: "/home/{{ user }}/bootcamp-app"
+
+    - name: Database initialization.
+      shell: npm run initdb
+      args:
+        chdir: "/home/{{ user }}/bootcamp-app"
+
+    - name: reboot the machine.
+      reboot:
