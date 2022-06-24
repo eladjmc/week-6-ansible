@@ -47,4 +47,4 @@ make sure to have this vars for your playbook - explained in base project documi
 
 enjoy.
 
-### Big thanks to Ben Asulin who is a master of windows server and had guided me and explained how to configure the windows machine
+### Big thanks to Ben Asulin who is a master of windows servers and had guided me and explained how to configure the windows machine
