@@ -1,0 +1,113 @@
+```yaml
+---
+
+- name: Provision Windows Machine
+  hosts: all 
+
+  tasks:
+
+  - name: Create ansible installs folder
+    win_file:
+      path: "{{ansible_install_folder}}"
+      state: directory
+
+  - name: Download NodeJS 14.15.3 (Includes NPM) installer
+    win_get_url:
+      url: https://nodejs.org/dist/v14.15.3/node-v14.15.3-x64.msi
+      dest: "{{node_install_folder}}\node-v14.15.3-x64.msi"
+ 
+
+  - name: Install MSI
+    win_package: 
+      path: {{node_install_folder}}\node-v14.15.3-x64.msi
+      state: present
+  
+
+  - name: Install Git
+    win_package:
+      path: https://github.com/git-for-windows/git/releases/download/v2.36.1.windows.1/Git-2.36.1-64-bit.exe
+      product_id: '{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'
+      arguments: /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"
+
+
+  - name: Ensure git vars are setup in windows
+    win_path:
+      elements:
+      - 'C:\Program Files\Git\bin\'
+      - 'C:\Program Files\Git\cmd\'
+
+    
+  - name: Reboot the machine with all defaults
+    win_reboot:
+
+
+  - name: Clone the bootcamp app
+    win_shell: |
+        cd C:\
+        git clone https://github.com/BenTest12/bootcamp-app.git
+
+
+  - name: Copy .env file
+    win_copy:
+      src: /home/ubuntu/project/bootcamp-app/.env
+      dest: "{{web_app_folder}}\.env"
+
+
+  - name: Run npm install for dependencies
+    win_shell: npm install 
+    args:
+      chdir: "{{web_app_folder}}"
+   
+
+  - name: Run npm install audit fix for dependencies
+    win_shell: npm audit fix --force
+    args:
+      chdir: "{{web_app_folder}}"
+
+
+  - name: Install pm2 node.js package globally.
+    win_shell: npm install pm2 -g
+    args:
+      chdir: "{{web_app_folder}}"
+  
+
+  - name: Configure the weight app 
+    win_shell: pm2 start src/index.js
+    args:
+      chdir: "{{web_app_folder}}"
+    async: 3
+    poll: 0
+
+
+  - name: Install pm2 windows workaround
+    win_shell: npm install pm2-windows-startup -g
+    args:
+      chdir: "{{web_app_folder}}"
+    async: 5
+    poll: 0
+
+
+  - name: Configure pm2 windows workaround
+    win_shell: pm2-startup install
+    args:
+      chdir: "{{web_app_folder}}"
+    async: 5
+    poll: 0
+
+
+  - name: Save project settings in pm2
+    win_shell: pm2 save
+    args:
+      chdir: "{{web_app_folder}}"
+    async: 5
+    poll: 0
+
+
+  - name: Run initDB
+    win_shell: node tools/initdb.js
+    args:
+      chdir: "{{web_app_folder}}"
+    async: 5
+    poll: 0
+
+```
