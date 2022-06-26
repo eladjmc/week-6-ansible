@@ -44,7 +44,7 @@
   - name: Clone the bootcamp app
     win_shell: |
         cd C:\
-        git clone https://github.com/BenTest12/bootcamp-app.git
+        git clone https://github.com/eladjmc/bootcamp-app.git
 
 
   - name: Copy .env file
